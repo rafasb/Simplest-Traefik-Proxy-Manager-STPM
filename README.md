@@ -66,7 +66,6 @@
 ## 📸 Capturas de pantalla
 
 <p align="center">
-  <img src="./images/Dashboard.png" alt="Dashboard principal" height="200"/>
   <img src="./images/ruta-servicio.png" alt="Añadir servicios" height="200"/>
   <img src="./images/middleware.png" alt="Añadir middleware" height="200"/>
 </p>
