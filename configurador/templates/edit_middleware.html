@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Editar Middleware {{ middleware.name }} - Simplest Traefik Proxy Manager{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Editar Middleware: {{ middleware.name }}</h2>
+        <a href="/middlewares" class="btn btn-secondary">Volver a Middlewares</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="card-title mb-0">Editar Middleware</h3>
+                </div>
+                <div class="card-body">
+                    <form id="editMiddlewareForm" method="POST" action="/update_middleware">
+                        <input type="hidden" id="edit_original_name" name="original_name" value="{{ middleware.name }}">
+                        
+                        <div class="mb-3">
+                            <label for="edit_name" class="form-label">Nombre</label>
+                            <input type="text" class="form-control" id="edit_name" name="name" required value="{{ middleware.name }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_type" class="form-label">Tipo</label>
+                            <input type="text" class="form-control" id="edit_type" name="type" readonly value="{{ middleware.type }}">
+                        </div>
+                        <div class="mb-3">
+                            <label for="edit_jsonConfig" class="form-label">Configuración JSON</label>
+                            <textarea class="form-control" id="edit_jsonConfig" name="jsonConfig" rows="12">{{ middleware.config | tojson(indent=2) }}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Actualizar Middleware</button>
+                            <a href="/middlewares" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title mb-0">Ayuda para {{ middleware.type }}</h3>
+                </div>
+                <div class="card-body">
+                    {% if middleware.type == "basicAuth" %}
+                        <p>Configuración para autenticación básica:</p>
+                        <pre><code>{
+  "users": ["usuario:contraseña"],
+  "realm": "Realm (opcional)",
+  "headerField": "X-WebAuth-User (opcional)",
+  "removeHeader": true/false (opcional)
+}</code></pre>
+                    {% elif middleware.type == "headers" %}
+                        <p>Configuración para manipulación de cabeceras:</p>
+                        <pre><code>{
+  "customRequestHeaders": {
+    "X-Script-Name": "/app"
+  },
+  "customResponseHeaders": {
+    "X-Custom-Response": "True"
+  }
+}</code></pre>
+                    {% elif middleware.type == "stripPrefix" %}
+                        <p>Configuración para eliminar prefijos de la URL:</p>
+                        <pre><code>{
+  "prefixes": ["/api", "/services"],
+  "forceSlash": true
+}</code></pre>
+                    {% elif middleware.type == "redirectScheme" %}
+                        <p>Configuración para redireccionar esquemas (HTTP -> HTTPS):</p>
+                        <pre><code>{
+  "scheme": "https",
+  "permanent": true,
+  "port": "443"
+}</code></pre>
+                    {% else %}
+                        <p>Información sobre el tipo de middleware <strong>{{ middleware.type }}</strong> 
+                        no disponible en la ayuda contextual.</p>
+                        <p>Consulte la <a href="https://doc.traefik.io/traefik/middlewares/overview/" 
+                        target="_blank">documentación oficial</a> para más detalles.</p>
+                    {% endif %}
+
+                    <hr>
+                    <div class="alert alert-warning">
+                        <strong>Importante:</strong> Asegúrese de que el formato JSON es válido antes de guardar.
+                    </div>
+                </div>
+            </div>
+            
+            {% if routers_using_middleware %}
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="card-title mb-0">Routers que usan este middleware</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                    {% for router in routers_using_middleware %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ router.name }}
+                            <span class="badge bg-primary rounded-pill">{{ router.rule }}</span>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Validación de JSON al enviar el formulario
+            document.getElementById('editMiddlewareForm').addEventListener('submit', function(e) {
+                const jsonConfig = document.getElementById('edit_jsonConfig').value;
+                try {
+                    JSON.parse(jsonConfig);
+                } catch(error) {
+                    e.preventDefault();
+                    alert('Error en el formato JSON: ' + error.message);
+                }
+            });
+        });
+    </script>
+{% endblock %}

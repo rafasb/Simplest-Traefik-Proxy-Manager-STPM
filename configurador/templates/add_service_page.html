@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+
+{% block title %}Añadir Servicio - Simplest Traefik Proxy Manager{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Añadir Nuevo Servicio</h2>
+        <a href="/" class="btn btn-secondary">
+            <i class="bi bi-house"></i> Volver al Panel
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">Configurar Servicio</h3>
+                </div>
+                <div class="card-body">
+                    <form id="serviceForm" method="POST" action="/add_service">
+                        <!-- Valor predeterminado, será reemplazado por backend -->
+                        <input type="hidden" name="router.name" value="temp-router-name">
+                        
+                        <h4 class="mb-3">Configuración de Router</h4>
+                        <div class="mb-3">
+                            <label class="form-label">Host (FQDN)</label>
+                            <input type="text" class="form-control" name="router.rule" required 
+                                placeholder="ejemplo.dominio.com">
+                            <div class="form-text text-muted">
+                                Nombre de dominio completo que apuntará al servicio
+                            </div>
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" name="router.tls" id="tlsCheck" checked>
+                            <label class="form-check-label" for="tlsCheck">Activar TLS (HTTPS)</label>
+                        </div>
+                        
+                        <div class="mb-4">
+                            <h4 class="mb-2">Middlewares</h4>
+                            <div class="card">
+                                <div class="card-body bg-light">
+                                    <div class="d-flex flex-wrap gap-2">
+                                        {% for middleware in middlewares %}
+                                        <div class="form-check">
+                                            <input type="checkbox" 
+                                                class="form-check-input" 
+                                                name="router.middlewares" 
+                                                value="{{ middleware }}" 
+                                                id="middleware-{{ middleware }}">
+                                            <label class="form-check-label" 
+                                                for="middleware-{{ middleware }}">
+                                                {{ middleware.name }}
+                                            </label>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h4 class="mb-3">Configuración de Servicio</h4>
+                        <div class="mb-3">
+                            <label class="form-label">Nombre</label>
+                            <input type="text" class="form-control" name="service.name" required 
+                                placeholder="mi-servicio">
+                            <div class="form-text text-muted">
+                                Nombre único para identificar este servicio
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">URL</label>
+                            <input type="text" class="form-control" name="service.url" required
+                                placeholder="http://servidor:puerto/">
+                            <div class="form-text text-muted">
+                                URL completa donde se encuentra el servicio (incluyendo protocolo y puerto)
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-circle"></i> Añadir Servicio
+                            </button>
+                            <a href="/" class="btn btn-secondary ms-2">
+                                <i class="bi bi-x-circle"></i> Cancelar
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title mb-0">Middlewares Disponibles</h3>
+                </div>
+                <div class="card-body">
+                    {% if middlewares %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for middleware in middlewares %}
+                                    <tr>
+                                        <td>{{ middleware.name }}</td>
+                                        <td><span class="badge bg-secondary">{{ middleware.type }}</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No hay middlewares disponibles.
+                            <a href="/add_middleware" class="btn btn-sm btn-primary mt-2">Crear middleware</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card mt-3">
+                <div class="card-header bg-warning text-dark">
+                    <h3 class="card-title mb-0">Consejos</h3>
+                </div>
+                <div class="card-body">
+                    <ul>
+                        <li>Use nombres descriptivos para sus servicios</li>
+                        <li>Verifique que la URL del servicio sea accesible desde el contenedor Traefik</li>
+                        <li>Para servicios internos, use nombres de contenedor Docker</li>
+                        <li>Para servicios externos, asegúrese de usar la IP o dominio correcto</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

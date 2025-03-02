@@ -1,0 +1,22 @@
+http:
+  middlewares:
+    https-redirect:
+      redirectScheme:
+        permanent: true
+        scheme: https
+    prefix-admin:
+      addPrefix:
+        prefix: /admin
+  routers:
+    to-asiste:
+      middlewares:
+      - https-redirect
+      rule: Host(`asiste.santisteban.link`)
+      service: asiste
+      tls:
+        certResolver: myresolver
+  services:
+    asiste:
+      loadBalancer:
+        servers:
+        - url: http://192.168.1.172:3001

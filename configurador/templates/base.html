@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Simplest Traefik Proxy Manager STPM{% endblock %}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.8.1/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container mt-4">
+        <h1>Simplest Traefik Proxy Manager STPM</h1>
+        
+        <!-- Navegación -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-light">
+            <div class="container-fluid">
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link" href="/"><i class="bi bi-house"></i> Panel Principal</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-server"></i> Servicios
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/add-service">Añadir Servicio</a></li>
+                                <li><a class="dropdown-item" href="/">Ver Servicios</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                                <i class="bi bi-gear"></i> Middlewares
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="/add_middleware">Añadir Middleware</a></li>
+                                <li><a class="dropdown-item" href="/middlewares">Gestionar Middlewares</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+                <div class="d-flex align-items-center">
+                    <div class="me-3" id="ca-status-indicator">
+                        <span class="badge bg-secondary">
+                            <i class="bi bi-question-circle"></i>
+                            CA: Verificando...
+                        </span>
+                    </div>
+                    <button class="btn btn-outline-success me-2" id="backupBtn"><i class="bi bi-download"></i> Backup</button>
+                    <button class="btn btn-outline-warning" id="restoreBtn"><i class="bi bi-upload"></i> Restaurar</button>
+                </div>
+            </div>
+        </nav>
+        
+        <!-- Mensajes Flash -->
+        {% with messages = get_flashed_messages(request) %}
+        {% if messages %}
+        <div class="container mt-3">
+        {% for message in messages %}
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+        </div>
+        {% endif %}
+        {% endwith %}   
+        <div class="row mt-4">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Bootstrap JS necesario para las alertas dismissible -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="static/js/app.js"></script>
+    
+    <script>
+        // Funcionalidad para backup y restore
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('backupBtn').addEventListener('click', function() {
+                if(confirm('¿Desea crear un backup de la configuración actual?')) {
+                    fetch('/backup', {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('Backup creado correctamente');
+                    })
+                    .catch(error => {
+                        alert('Error al crear backup: ' + error);
+                    });
+                }
+            });
+            
+            document.getElementById('restoreBtn').addEventListener('click', function() {
+                if(confirm('¿Está seguro de restaurar la configuración desde el último backup? Esta acción no se puede deshacer.')) {
+                    fetch('/restore', {method: 'POST'})
+                    .then(response => response.json())
+                    .then(data => {
+                        alert('Configuración restaurada correctamente');
+                        location.reload();
+                    })
+                    .catch(error => {
+                        alert('Error al restaurar configuración: ' + error);
+                    });
+                }
+            });
+            
+            // Verificar el estado de la CA
+            function checkCAStatus() {
+                fetch('/ca_status')
+                .then(response => response.json())
+                .then(data => {
+                    const indicator = document.getElementById('ca-status-indicator');
+                    if (data.status === 'success') {
+                        indicator.innerHTML = `
+                            <span class="badge bg-success">
+                                <i class="bi bi-check-circle"></i>
+                                CA: Activa
+                            </span>`;
+                    } else if (data.status === 'warning') {
+                        indicator.innerHTML = `
+                            <span class="badge bg-warning" title="Revisa caServer en traefik.yml">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                CA: Staging
+                            </span>`;
+                    } else {
+                        indicator.innerHTML = `
+                            <span class="badge bg-danger" title="Revisa traefik.yml email. Revisa permisos acme.json">
+                                <i class="bi bi-x-circle"></i>
+                                CA: Inactiva
+                            </span>`;
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('ca-status-indicator').innerHTML = `
+                        <span class="badge bg-danger">
+                            <i class="bi bi-exclamation-triangle"></i>
+                            CA: Error al verificar
+                        </span>`;
+                });
+            }
+            
+            // Verificar el estado al cargar la página
+            checkCAStatus();
+            
+            // Verificar el estado cada 60 segundos
+            setInterval(checkCAStatus, 60000);
+        });
+    </script>
+</body>
+</html>

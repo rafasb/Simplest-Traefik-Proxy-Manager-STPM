@@ -1,0 +1,11 @@
+fastapi
+httpx
+uvicorn
+pyyaml 
+pydantic
+jinja2
+pyOpenSSL
+cryptography
+itsdangerous
+python-multipart
+passlib

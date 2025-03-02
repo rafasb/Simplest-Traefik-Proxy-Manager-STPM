@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h2>Panel de Control</h2>
+    <a href="/add-service" class="btn btn-success me-2">
+        <i class="bi bi-plus-circle"></i> Añadir Servicio
+    </a>
+</div>
+<div class="col-md-12">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3 class="card-title mb-0">Configuración Actual</h3>
+        </div>
+        <div class="card-body">
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>URL</th>
+                            <th>Host</th>
+                            <th>TLS Caducidad</th>
+                            <th>Middlewares</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for service in services %}
+                            {% for router in routers %}
+                                {% if router.service_name == service.name %}
+                                <tr>
+                                    <td>{{ service.url }}</td>
+                                    <td title="{{ service.name }}">
+                                        {{ router.fqdn }}
+                                    </td>
+                                    <td>
+                                        {% if router.fqdn in certificates %}
+                                        <span class="badge bg-success">{{ certificates[router.fqdn].not_after }}</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">No Certificado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if router.middlewares %}
+                                        <ul class="list-unstyled mb-0">
+                                            {% for middleware in router.middlewares %}
+                                            <li><span class="badge bg-info text-dark">{{ middleware }}</span></li>
+                                            {% endfor %}
+                                        </ul>
+                                        {% else %}
+                                        <span class="text-muted">Ninguno</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteService('{{ service.name }}')">
+                                            <i class="bi bi-trash"></i> Eliminar
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            {% if not services or services|length == 0 %}
+            <div class="alert alert-info">
+                <p>No hay servicios configurados actualmente.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

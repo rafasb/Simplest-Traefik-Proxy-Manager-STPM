@@ -1,0 +1,43 @@
+api:
+  dashboard: true
+  insecure: true
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    # # Expose containers by default in Traefik v2
+    # # Los contenedores requieren la etiqueta traefik.enable=true para ser expuestos
+    exposedByDefault: false
+    network: traefik-public
+    # tls:
+    #   cert: path/to/foo.cert
+    #   key: path/to/foo.key
+  file:
+    directory: /traefik.d
+    watch: true
+
+entryPoints:
+  web:
+    address: ":80"
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+
+  websecure:
+    address: ":443"
+
+certificatesResolvers:
+  myresolver:
+    acme:
+      # Este email debe ser válido y accesible para recibir notificaciones de renovación
+      email: myemail@example.com
+      # Para obtener un certificado de prueba, cambiar la URL por:
+      # caServer: https://acme-staging-v02.api.letsencrypt.org/directory
+      # Para un certificado válido, cambiar la URL por:
+      caServer: https://acme-v02.api.letsencrypt.org/directory
+      # Estos cambios requieren resetear el contenedor de Traefik eliminando el contenido del fichero acme.json
+      storage: acme.json
+      httpChallenge:
+        entryPoint: web

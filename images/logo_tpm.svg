@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300">
+  <!-- Fondo circular -->
+  <circle cx="150" cy="150" r="140" fill="#f9fbfc" stroke="#1a2942" stroke-width="6"/>
+  
+  <!-- Formas conectadas representando un proxy -->
+  <path d="M80,90 L150,90 L150,140 L220,140 L220,210 L80,210 Z" fill="#1a2942" opacity="0.2"/>
+  
+  <!-- Flechas de comunicación/enrutamiento -->
+  <path d="M70,120 L130,120 L130,100 L160,150 L130,200 L130,180 L70,180 Z" fill="#1e6ceb"/>
+  <path d="M230,120 L170,120 L170,100 L140,150 L170,200 L170,180 L230,180 Z" fill="#24d1e7"/>
+  
+  <!-- Círculos de puntos de conexión -->
+  <circle cx="70" cy="150" r="15" fill="#1a2942"/>
+  <circle cx="150" cy="90" r="15" fill="#1a2942"/>
+  <circle cx="230" cy="150" r="15" fill="#1a2942"/>
+  <circle cx="150" cy="210" r="15" fill="#1a2942"/>
+  
+  <!-- Texto TPM -->
+  <text x="150" y="260" font-family="Arial, sans-serif" font-size="28" font-weight="bold" text-anchor="middle" fill="#1a2942">TPM</text>
+</svg>

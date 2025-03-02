@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Gestión de Middlewares - Simplest Traefik Proxy Manager{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Gestión de Middlewares</h2>
+        <div>
+            <a href="/add_middleware" class="btn btn-success me-2">
+                <i class="bi bi-plus-circle"></i> Añadir Middleware
+            </a>
+            <a href="/" class="btn btn-secondary">
+                <i class="bi bi-house"></i> Volver al Panel
+            </a>
+        </div>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Middlewares Existentes</h3>
+                </div>
+                <div class="card-body">
+                    {% if middlewares %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th>Nombre</th>
+                                        <th>Tipo</th>
+                                        <th>Configuración</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for middleware in middlewares %}
+                                    <tr>
+                                        <td>{{ middleware.name }}</td>
+                                        <td>{{ middleware.type }}</td>
+                                        <td>
+                                            <pre class="small mb-0"><code>{{ middleware.config | tojson(indent=2) }}</code></pre>
+                                        </td>
+                                        <td>
+                                            <a href="/update_middleware/{{ middleware.name }}" class="btn btn-sm btn-warning">
+                                                <i class="bi bi-pencil"></i> Editar
+                                            </a>
+                                            <button class="btn btn-sm btn-danger delete-middleware" 
+                                                    data-name="{{ middleware.name }}">
+                                                <i class="bi bi-trash"></i> Eliminar
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            <p>No hay middlewares configurados. Añade uno nuevo para comenzar.</p>
+                            <a href="/add_middleware" class="btn btn-primary mt-2">Añadir Primer Middleware</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal para confirmar eliminación -->
+    <div class="modal fade" id="deleteMiddlewareModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Confirmar eliminación</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    ¿Estás seguro de que deseas eliminar el middleware <span id="middlewareToDelete"></span>?
+                    <div class="alert alert-warning mt-3">
+                        <strong>¡Atención!</strong> Si este middleware está siendo utilizado por algún router, eliminarlo podría causar problemas.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <form id="deleteMiddlewareForm" method="POST" action="/delete_middleware">
+                        <input type="hidden" id="delete_name" name="name">
+                        <button type="submit" class="btn btn-danger">Eliminar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Manejar eliminación de middleware
+            document.querySelectorAll('.delete-middleware').forEach(button => {
+                button.addEventListener('click', function() {
+                    const name = this.dataset.name;
+                    document.getElementById('middlewareToDelete').textContent = name;
+                    document.getElementById('delete_name').value = name;
+                    
+                    // Mostrar modal de confirmación
+                    const deleteModal = new bootstrap.Modal(document.getElementById('deleteMiddlewareModal'));
+                    deleteModal.show();
+                });
+            });
+        });
+    </script>
+{% endblock %}

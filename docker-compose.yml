@@ -1,0 +1,45 @@
+services:
+  traefik:
+    image: traefik:v3.3
+    container_name: traefik
+    restart: unless-stopped
+    ports:
+      - 80:80
+      - 443:443
+      # Cambiar a 127.0.0.1:8080:8080 para evitar problemas de seguridad
+      - 8080:8080
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./traefik/traefik.yml:/traefik.yml
+      - ./traefik/traefik.d:/traefik.d
+      - ./traefik/acme.json:/acme.json
+    command: ["--configFile=/traefik.yml"]
+    networks:
+      - traefik-public
+      - traefik-internal
+  
+  configurador:
+    build:
+      context: ./configurador
+      dockerfile: Dockerfile
+    container_name: traefik-configurador
+    restart: unless-stopped
+    ports:
+      # Cambiar a 127.0.0.1:9000:9000 para evitar problemas de seguridad
+      - 9000:9000
+    volumes:
+      - ./configurador:/app
+      - ./traefik:/traefik
+    depends_on:
+      - traefik
+    environment:
+      - PATH_HTTP=/traefik/traefik.d/http.yml
+      - PATH_ACME=/traefik/acme.json
+      # PLEASE!, change this key for your own. In bash, you can generate it with: openssl rand -base64 32
+      - MIDDLEWARE_KEY=98190290bb6c9f902a2f7d78f2159d5672a0fdb3c76210dc54ad516420a4da1d
+    networks:
+      - traefik-public
+
+networks:
+  traefik-public:
+  traefik-internal:

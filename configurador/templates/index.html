@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+{% from "current_config.html" import current_config %}
+
+{% block content %}
+    {{ current_config(config, certificates, routers, services) }}
+{% endblock %}
