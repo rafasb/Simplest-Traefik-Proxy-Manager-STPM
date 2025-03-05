@@ -11,8 +11,8 @@ http:
     to-asiste:
       middlewares:
       - https-redirect
-      rule: Host(`asiste.santisteban.link`)
-      service: asiste
+      rule: Host(`test.example.com`)
+      service: test
       tls:
         certResolver: myresolver
   services:
