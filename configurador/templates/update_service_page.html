@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Actualizar Servicio {{ service_config.service.name }} - Simplest Traefik Proxy Manager{% endblock %}
+
+{% block content %}
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Actualizar Servicio: {{ service_config.service.name }}</h2>
+        <a href="/" class="btn btn-secondary">Volver al Dashboard</a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="card-title mb-0">Actualizar Servicio</h3>
+                </div>
+                <div class="card-body">
+                    <form id="updateServiceForm" method="POST" action="/update_service">
+                        <input type="hidden" name="original_service_name" value="{{ service_config.service.name }}">
+                        
+                        <div class="mb-3">
+                            <label for="service_name" class="form-label">Nombre del Servicio</label>
+                            <input type="text" class="form-control" id="service_name" name="service.name" required value="{{ service_config.service.name }}">
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="service_url" class="form-label">URL del Servicio</label>
+                            <input type="text" class="form-control" id="service_url" name="service.url" required value="{{ service_config.service.url }}">
+                            <small class="text-muted">Ejemplo: http://servicio:8080</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="router_rule" class="form-label">Regla de Enrutamiento (Host)</label>
+                            {% set host_value = service_config.router.rule.replace('Host(`', '').replace('`)', '') %}
+                            <input type="text" class="form-control" id="router_rule" name="router.rule" required value="{{ host_value }}">
+                            <small class="text-muted">Dominio al que responderá este servicio. Ejemplo: ejemplo.com</small>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Middlewares</label>
+                            <div class="border rounded p-3">
+                                {% for middleware in middlewares %}
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="router.middlewares" value="{{ middleware.name }}" id="middleware_{{ middleware.name }}"
+                                        {% if middleware.name in service_config.router.middlewares %}checked{% endif %}>
+                                    <label class="form-check-label" for="middleware_{{ middleware.name }}">
+                                        {{ middleware.name }} <span class="badge bg-secondary">{{ middleware.type }}</span>
+                                    </label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="router_tls" name="router.tls" 
+                                    {% if service_config.router.tls %}checked{% endif %}>
+                                <label class="form-check-label" for="router_tls">Habilitar TLS/HTTPS</label>
+                            </div>
+                        </div>
+                        
+                        <div class="d-flex justify-content-between">
+                            <button type="submit" class="btn btn-primary">Actualizar Servicio</button>
+                            <a href="/" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h3 class="card-title mb-0">Información del Servicio</h3>
+                </div>
+                <div class="card-body">
+                    <h5>Configuración Actual</h5>
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Router Name:</th>
+                            <td>{{ service_config.router.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Service Name:</th>
+                            <td>{{ service_config.service.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>URL:</th>
+                            <td><code>{{ service_config.service.url }}</code></td>
+                        </tr>
+                        <tr>
+                            <th>Rule:</th>
+                            <td><code>{{ service_config.router.rule }}</code></td>
+                        </tr>
+                        <tr>
+                            <th>TLS:</th>
+                            <td>{% if service_config.router.tls %}Enabled{% else %}Disabled{% endif %}</td>
+                        </tr>
+                    </table>
+                    
+                    <div class="alert alert-warning">
+                        <strong>Importante:</strong> Si cambia el nombre del servicio, se creará un nuevo servicio y se eliminará el anterior.
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <strong>Consejo:</strong> Para usar certificados HTTPS, asegúrese de que TLS esté habilitado y que el dominio esté correctamente configurado en el proveedor DNS.
+                    </div>
+                </div>
+            </div>
+
+            {% if service_config.router.middlewares %}
+            <div class="card mt-3">
+                <div class="card-header bg-success text-white">
+                    <h3 class="card-title mb-0">Middlewares Aplicados</h3>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group">
+                    {% for middleware_name in service_config.router.middlewares %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            {{ middleware_name }}
+                            <a href="/update_middleware/{{ middleware_name }}" class="btn btn-sm btn-outline-primary">Ver</a>
+                        </li>
+                    {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Validación del formulario
+            document.getElementById('updateServiceForm').addEventListener('submit', function(e) {
+                const serviceName = document.getElementById('service_name').value.trim();
+                const serviceUrl = document.getElementById('service_url').value.trim();
+                const routerRule = document.getElementById('router_rule').value.trim();
+                
+                if (!serviceName) {
+                    e.preventDefault();
+                    alert('El nombre del servicio no puede estar vacío');
+                    return;
+                }
+                
+                if (!serviceUrl) {
+                    e.preventDefault();
+                    alert('La URL del servicio no puede estar vacía');
+                    return;
+                }
+                
+                if (!routerRule) {
+                    e.preventDefault();
+                    alert('La regla de enrutamiento no puede estar vacía');
+                    return;
+                }
+                
+                // Validar formato URL
+                if (!serviceUrl.startsWith('http://') && !serviceUrl.startsWith('https://')) {
+                    e.preventDefault();
+                    alert('La URL del servicio debe comenzar con http:// o https://');
+                    return;
+                }
+            });
+        });
+    </script>
+{% endblock %}

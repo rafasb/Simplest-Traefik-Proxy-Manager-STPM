@@ -125,8 +125,27 @@ def add_service_config(service_config: ServiceConfig) -> bool:
         if router.middlewares:
             middleware_names = []
             for middleware in router.middlewares:
-                middleware_name = middleware.split(" ")[0].split("=")[1].replace("'", "")
-                middleware_names.append(middleware_name)
+                try:
+                    # Manejar diferentes formatos posibles
+                    if "=" in middleware:
+                        parts = middleware.split("=", 1)
+                        # Si hay un espacio antes del =, tomamos la primera parte
+                        if " " in parts[0]:
+                            middleware_name = parts[0].split(" ")[0].strip()
+                        else:
+                            middleware_name = parts[0].strip()
+                        
+                        # Si aún hay comillas en el nombre, las quitamos
+                        middleware_name = middleware_name.replace("'", "").replace('"', "")
+                    else:
+                        # Si no hay =, usamos el middleware como está
+                        middleware_name = middleware.strip()
+                    
+                    middleware_names.append(middleware_name)
+                except Exception as e:
+                    # Ignorar middlewares con formato incorrecto o registrar el error
+                    print(f"Error al procesar middleware '{middleware}': {str(e)}")
+                    continue
             
             config["http"]["routers"][router.name]["middlewares"] = middleware_names
         
